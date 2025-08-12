@@ -145,6 +145,31 @@ app_license = "mit"
 # 	}
 # }
 
+doc_events = {
+    "Payment Entry": {
+        "after_insert": "payment_tracking.payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments",
+        "on_update_after_submit": "payment_tracking.payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments",
+        "on_cancel": "payment_tracking.payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments",
+        "on_trash": "payment_tracking.payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments"
+    }
+}
+
+# Custom Fields
+fixtures = [
+    {
+        "doctype": "Custom Field",
+        "filters": [
+            [
+                "name", "in", [
+                    "Purchase Order-custom_total_payment",
+                    "Sales Order-custom_total_payment", 
+                    "Purchase Invoice-custom_total_payment",
+                    "Sales Invoice-custom_total_payment"
+                ]
+            ]
+        ]
+    }
+]
 # Scheduled Tasks
 # ---------------
 
