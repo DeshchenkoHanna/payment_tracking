@@ -35,7 +35,7 @@ def create_payment_tracking_fields():
         "Purchase Invoice": [
             {
                 "fieldname": "custom_total_payment",
-                "label": "Total Payment", 
+                "label": "Total Payment",
                 "fieldtype": "Currency",
                 "options": "currency",
                 "read_only": 1,

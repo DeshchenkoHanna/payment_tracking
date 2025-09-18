@@ -1,6 +1,5 @@
-# payment_tracking/payment_tracking/sc_payment/install.py
 import frappe
-from payment_tracking.payment_tracking.sc_payment.custom_fields import create_payment_tracking_fields
+from .sc_payment.custom_fields import create_payment_tracking_fields
 
 def after_install():
     """Run after app installation"""

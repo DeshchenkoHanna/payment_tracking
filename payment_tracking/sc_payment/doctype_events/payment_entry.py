@@ -1,6 +1,7 @@
 # payment_tracking/payment_tracking/sc_payment/doctype_events/payment_entry.py
 import frappe
 from frappe import _
+# import debugpy
 
 def update_total_payments(doc, method=None):
     """Update total payment amounts in related documents when Payment Entry changes"""
@@ -8,9 +9,8 @@ def update_total_payments(doc, method=None):
     if not doc.references:
         return
         
-    # Get all unique reference documents
+    # Get all unique reference documents (direct references)
     reference_docs = {}
-    
     for ref in doc.references:
         if ref.reference_doctype in ["Purchase Order", "Sales Order", "Purchase Invoice", "Sales Invoice"]:
             key = f"{ref.reference_doctype}::{ref.reference_name}"
@@ -19,22 +19,115 @@ def update_total_payments(doc, method=None):
                     "doctype": ref.reference_doctype,
                     "name": ref.reference_name
                 }
+                
+    # Find indirect references (Orders linked to Invoices)
+    indirect_docs = find_indirect_references(reference_docs)
+    
+    # Combine direct and indirect references
+    all_docs = {**reference_docs, **indirect_docs}
     
     # Update total payments for each referenced document
-    for ref_key, ref_data in reference_docs.items():
+    for ref_key, ref_data in all_docs.items():
         try:
             update_document_total_payment(ref_data["doctype"], ref_data["name"])
         except Exception as e:
-            frappe.log_error(
-                f"Error updating total payment for {ref_data['doctype']} {ref_data['name']}: {str(e)}",
-                "Payment Tracking Error"
-            )
+            error_msg = f"Error updating total payment for {ref_data['doctype']} {ref_data['name']}: {str(e)}"
+            frappe.log_error(error_msg, "Payment Tracking Error")
+
+def find_indirect_references(direct_refs):
+    """Find Orders that are indirectly referenced through Invoices"""
+    
+    indirect_docs = {}
+    
+    for _, ref_data in direct_refs.items():
+        doctype = ref_data["doctype"]
+        docname = ref_data["name"]
+        
+        # If Payment Entry references an Invoice, find the related Order(s)
+        if doctype == "Sales Invoice":
+            # Get Sales Orders linked to this Sales Invoice
+            linked_orders = frappe.db.sql("""
+                SELECT DISTINCT si_item.sales_order as order_name
+                FROM `tabSales Invoice Item` si_item
+                WHERE si_item.parent = %(invoice_name)s 
+                AND si_item.sales_order IS NOT NULL
+                AND si_item.sales_order != ''
+            """, {"invoice_name": docname}, as_dict=True)
+            
+            for order in linked_orders:
+                if order.order_name:
+                    key = f"Sales Order::{order.order_name}"
+                    if key not in indirect_docs:
+                        indirect_docs[key] = {
+                            "doctype": "Sales Order",
+                            "name": order.order_name
+                        }
+        
+        elif doctype == "Purchase Invoice":
+            # Get Purchase Orders linked to this Purchase Invoice
+            linked_orders = frappe.db.sql("""
+                SELECT DISTINCT pi_item.purchase_order as order_name
+                FROM `tabPurchase Invoice Item` pi_item
+                WHERE pi_item.parent = %(invoice_name)s 
+                AND pi_item.purchase_order IS NOT NULL
+                AND pi_item.purchase_order != ''
+            """, {"invoice_name": docname}, as_dict=True)
+            
+            for order in linked_orders:
+                if order.order_name:
+                    key = f"Purchase Order::{order.order_name}"
+                    if key not in indirect_docs:
+                        indirect_docs[key] = {
+                            "doctype": "Purchase Order",
+                            "name": order.order_name
+                        }
+        
+        # If Payment Entry references an Order, find related Invoices
+        elif doctype == "Sales Order":
+            # Get Sales Invoices linked to this Sales Order
+            linked_invoices = frappe.db.sql("""
+                SELECT DISTINCT si_item.parent as invoice_name
+                FROM `tabSales Invoice Item` si_item
+                WHERE si_item.sales_order = %(order_name)s
+                AND si_item.parent IS NOT NULL
+                AND si_item.parent != ''
+            """, {"order_name": docname}, as_dict=True)
+            
+            for invoice in linked_invoices:
+                if invoice.invoice_name:
+                    key = f"Sales Invoice::{invoice.invoice_name}"
+                    if key not in indirect_docs:
+                        indirect_docs[key] = {
+                            "doctype": "Sales Invoice",
+                            "name": invoice.invoice_name
+                        }
+        
+        elif doctype == "Purchase Order":
+            # Get Purchase Invoices linked to this Purchase Order
+            linked_invoices = frappe.db.sql("""
+                SELECT DISTINCT pi_item.parent as invoice_name
+                FROM `tabPurchase Invoice Item` pi_item
+                WHERE pi_item.purchase_order = %(order_name)s
+                AND pi_item.parent IS NOT NULL
+                AND pi_item.parent != ''
+            """, {"order_name": docname}, as_dict=True)
+            
+            for invoice in linked_invoices:
+                if invoice.invoice_name:
+                    key = f"Purchase Invoice::{invoice.invoice_name}"
+                    if key not in indirect_docs:
+                        indirect_docs[key] = {
+                            "doctype": "Purchase Invoice",
+                            "name": invoice.invoice_name
+                        }
+    
+    return indirect_docs
 
 def update_document_total_payment(doctype, docname):
     """Calculate and update total payment for a specific document"""
     
-    # Get all payment entries related to this document
-    payment_entries = frappe.db.sql("""
+    # Get direct payments to this document
+    direct_payments = frappe.db.sql("""
         SELECT 
             pe.name,
             pe.docstatus,
@@ -51,13 +144,59 @@ def update_document_total_payment(doctype, docname):
         "docname": docname
     }, as_dict=True)
     
+    
+    # Get indirect payments (for Orders through related Invoices)
+    indirect_payments = []
+    if doctype == "Sales Order":
+        # Get payments to Sales Invoices linked to this Sales Order
+        indirect_payments = frappe.db.sql("""
+            SELECT DISTINCT
+                pe.name,
+                pe.docstatus,
+                per.allocated_amount,
+                pe.payment_type
+            FROM `tabPayment Entry` pe
+            INNER JOIN `tabPayment Entry Reference` per ON pe.name = per.parent
+            INNER JOIN `tabSales Invoice Item` si_item ON per.reference_name = si_item.parent
+            WHERE 
+                per.reference_doctype = 'Sales Invoice'
+                AND si_item.sales_order = %(docname)s
+                AND pe.docstatus = 1
+        """, {"docname": docname}, as_dict=True)
+        
+    elif doctype == "Purchase Order":
+        # Get payments to Purchase Invoices linked to this Purchase Order
+        indirect_payments = frappe.db.sql("""
+            SELECT DISTINCT
+                pe.name,
+                pe.docstatus,
+                per.allocated_amount,
+                pe.payment_type
+            FROM `tabPayment Entry` pe
+            INNER JOIN `tabPayment Entry Reference` per ON pe.name = per.parent
+            INNER JOIN `tabPurchase Invoice Item` pi_item ON per.reference_name = pi_item.parent
+            WHERE 
+                per.reference_doctype = 'Purchase Invoice'
+                AND pi_item.purchase_order = %(docname)s
+                AND pe.docstatus = 1
+        """, {"docname": docname}, as_dict=True)
+    
+    
+    # Combine direct and indirect payments
+    all_payments = direct_payments + indirect_payments
+    
     total_payment = 0
     
-    for pe in payment_entries:
-        if pe.payment_type == "Receive":
-            total_payment += pe.allocated_amount or 0
-        elif pe.payment_type == "Pay":
-            total_payment += pe.allocated_amount or 0
+    # Calculate total from all payment entries
+    for pe in all_payments:
+        amount = pe.allocated_amount or 0
+        if pe.payment_type in ["Receive", "Pay"]:
+            total_payment += amount
+    
+    # Check if the custom field exists
+    if not frappe.db.has_column(doctype, "custom_total_payment"):
+        frappe.throw(f"Custom field 'custom_total_payment' not found in {doctype}. Please reinstall the app.")
+        return
     
     # Update the document
     frappe.db.set_value(
@@ -89,3 +228,5 @@ def recalculate_all_payments():
                 )
     
     return _("Payment totals recalculated successfully")
+
+

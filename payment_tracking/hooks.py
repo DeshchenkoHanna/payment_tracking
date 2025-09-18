@@ -43,7 +43,7 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {"Purchase Invoice": "public/js/purchase_invoice.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -83,7 +83,7 @@ app_license = "mit"
 # ------------
 
 # before_install = "payment_tracking.install.before_install"
-# after_install = "payment_tracking.install.after_install"
+after_install = "payment_tracking.install.after_install"
 
 # Uninstallation
 # ------------
@@ -147,10 +147,10 @@ app_license = "mit"
 
 doc_events = {
     "Payment Entry": {
-        "after_insert": "payment_tracking.payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments",
-        "on_update_after_submit": "payment_tracking.payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments",
-        "on_cancel": "payment_tracking.payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments",
-        "on_trash": "payment_tracking.payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments"
+        "on_submit": "payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments",
+        "on_update_after_submit": "payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments",
+        "on_cancel": "payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments",
+        "on_trash": "payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments"
     }
 }
 
@@ -162,7 +162,7 @@ fixtures = [
             [
                 "name", "in", [
                     "Purchase Order-custom_total_payment",
-                    "Sales Order-custom_total_payment", 
+                    "Sales Order-custom_total_payment",
                     "Purchase Invoice-custom_total_payment",
                     "Sales Invoice-custom_total_payment"
                 ]
