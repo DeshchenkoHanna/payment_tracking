@@ -155,6 +155,12 @@ doc_events = {
         "on_update_after_submit": "payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments",
         "on_cancel": "payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments",
         "on_trash": "payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments"
+    },
+    "Payment Request": {
+        "after_insert": "payment_tracking.api.sales_order_utils.link_payment_request_to_schedule"
+    },
+    "Sales Invoice": {
+        "after_insert": "payment_tracking.api.sales_order_utils.link_sales_invoice_to_schedule"
     }
 }
 
