@@ -174,7 +174,11 @@ fixtures = [
                     "Purchase Order-custom_total_payment",
                     "Sales Order-custom_total_payment",
                     "Purchase Invoice-custom_total_payment",
-                    "Sales Invoice-custom_total_payment"
+                    "Purchase Invoice-custom_document_links_details",
+                    "Sales Invoice-custom_total_payment",
+                    "Payment Entry-custom_document_links_details",
+                    "Payment Schedule-custom_invoice_doctype",
+                    "Payment Schedule-custom_invoice_name"
                 ]
             ]
         ]
