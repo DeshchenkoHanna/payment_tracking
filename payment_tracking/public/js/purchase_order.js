@@ -1,4 +1,4 @@
-frappe.ui.form.on('Sales Order', {
+frappe.ui.form.on('Purchase Order', {
     refresh: function(frm) {
         add_create_buttons_to_payment_schedule(frm);
     }
@@ -81,16 +81,16 @@ function add_create_buttons_to_payment_schedule(frm) {
                     let is_last_row = row_index === frm.doc.payment_schedule.length;
 
                     if (is_last_row) {
-                        // Check if Sales Order is submitted before creating Sales Invoice
+                        // Check if Purchase Order is submitted before creating Purchase Invoice
                         if (frm.doc.docstatus !== 1) {
                             frappe.show_alert({
-                                message: __('Sales Order must be submitted before creating Sales Invoice'),
+                                message: __('Purchase Order must be submitted before creating Purchase Invoice'),
                                 indicator: 'orange'
                             });
                             return;
                         }
-                        // Create Sales Invoice for the last payment schedule row
-                        create_sales_invoice_from_schedule(frm, row_doc);
+                        // Create Purchase Invoice for the last payment schedule row
+                        create_purchase_invoice_from_schedule(frm, row_doc);
                     } else {
                         // Validate Payment Request can be created (ERPNext standard logic)
                         validate_payment_request_creation(frm, row_doc, row_index);
@@ -104,9 +104,9 @@ function add_create_buttons_to_payment_schedule(frm) {
 function validate_payment_request_creation(frm, schedule_row, row_index) {
     // Call server to validate if Payment Request can be created (ERPNext standard logic)
     frappe.call({
-        method: 'payment_tracking.api.sales_order_utils.can_create_payment_request',
+        method: 'payment_tracking.api.purchase_order_utils.can_create_payment_request',
         args: {
-            sales_order: frm.doc.name,
+            purchase_order: frm.doc.name,
             payment_amount: schedule_row.payment_amount
         },
         callback: function(r) {
@@ -139,12 +139,12 @@ function validate_payment_request_creation(frm, schedule_row, row_index) {
 function create_payment_request_from_schedule(frm, schedule_row, row_index) {
     // Create a new Payment Request based on the Payment Schedule row
     frappe.route_options = {
-        'payment_request_type': 'Inward',
-        'party_type': 'Customer',
-        'party': frm.doc.customer,
+        'payment_request_type': 'Outward',
+        'party_type': 'Supplier',
+        'party': frm.doc.supplier,
         'currency': frm.doc.currency,
         'company': frm.doc.company,
-        'reference_doctype': 'Sales Order',
+        'reference_doctype': 'Purchase Order',
         'reference_name': frm.doc.name,
         'grand_total': schedule_row.payment_amount,
         'payment_term_pos': row_index
@@ -166,10 +166,10 @@ function create_payment_request_from_schedule(frm, schedule_row, row_index) {
     frappe.new_doc('Payment Request');
 }
 
-function create_sales_invoice_from_schedule(frm, schedule_row) {
-    // Use Frappe's standard method to create Sales Invoice from Sales Order
+function create_purchase_invoice_from_schedule(frm, schedule_row) {
+    // Use Frappe's standard method to create Purchase Invoice from Purchase Order
     frappe.model.open_mapped_doc({
-        method: "erpnext.selling.doctype.sales_order.sales_order.make_sales_invoice",
+        method: "erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice",
         frm: frm,
         args: {
             ignore_pricing_rule: 1
@@ -181,7 +181,7 @@ function create_sales_invoice_from_schedule(frm, schedule_row) {
             }
 
             // Note: Linking back to Payment Schedule (last row) is handled by server-side hook (after_insert)
-            // Sales Invoice is automatically linked to the last row of Payment Schedule
+            // Purchase Invoice is automatically linked to the last row of Payment Schedule
         }
     });
 }

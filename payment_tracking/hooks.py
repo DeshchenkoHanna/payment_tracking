@@ -46,7 +46,8 @@ app_license = "mit"
 doctype_js = {
     "Purchase Invoice": "public/js/purchase_invoice.js",
     "Payment Entry": "public/js/payment_entry.js",
-    "Sales Order": "public/js/sales_order.js"
+    "Sales Order": "public/js/sales_order.js",
+    "Purchase Order": "public/js/purchase_order.js"
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -157,10 +158,16 @@ doc_events = {
         "on_trash": "payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments"
     },
     "Payment Request": {
-        "after_insert": "payment_tracking.api.sales_order_utils.link_payment_request_to_schedule"
+        "after_insert": [
+            "payment_tracking.api.sales_order_utils.link_payment_request_to_schedule",
+            "payment_tracking.api.purchase_order_utils.link_payment_request_to_schedule"
+        ]
     },
     "Sales Invoice": {
         "after_insert": "payment_tracking.api.sales_order_utils.link_sales_invoice_to_schedule"
+    },
+    "Purchase Invoice": {
+        "after_insert": "payment_tracking.api.purchase_order_utils.link_purchase_invoice_to_schedule"
     }
 }
 
