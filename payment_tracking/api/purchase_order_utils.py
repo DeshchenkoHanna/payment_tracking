@@ -1,50 +1,6 @@
 import frappe
 from frappe import _
 
-@frappe.whitelist()
-def create_payment_request_from_po(purchase_order, payment_amount, payment_term=None, due_date=None, payment_term_pos=None):
-    """
-    Create Payment Request from Purchase Order
-    """
-    # Get Purchase Order document
-    po = frappe.get_doc("Purchase Order", purchase_order)
-
-    # Create new Payment Request
-    pr = frappe.new_doc("Payment Request")
-
-    # Set basic fields
-    pr.payment_request_type = "Outward"
-    pr.party_type = "Supplier"
-    pr.party = po.supplier
-    pr.currency = po.currency
-    pr.company = po.company
-
-    # Set reference to Purchase Order
-    pr.reference_doctype = "Purchase Order"
-    pr.reference_name = po.name
-
-    # Set amount
-    pr.grand_total = float(payment_amount)
-
-    # Set payment term position for linking back
-    if payment_term_pos:
-        pr.payment_term_pos = int(payment_term_pos)
-
-    # Set payment term if provided
-    if payment_term:
-        pr.payment_term = payment_term
-
-    # Set due date if provided
-    if due_date:
-        pr.schedule_date = due_date
-
-    # Set mode of payment (optional, can be set by user later)
-    pr.mode_of_payment = None
-
-    # Insert the document
-    pr.insert(ignore_permissions=True)
-
-    return pr.name
 
 @frappe.whitelist()
 def can_create_payment_request(purchase_order, payment_amount):
