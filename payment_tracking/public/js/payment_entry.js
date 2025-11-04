@@ -64,7 +64,8 @@ frappe.ui.form.on('Payment Entry', {
 });
 
 function update_document_links_details(frm) {
-    if (!frm.doc.party || !frm.doc.party_type || !frm.doc.name) {
+    // Don't run on new unsaved documents
+    if (frm.is_new() || !frm.doc.party || !frm.doc.party_type || !frm.doc.name) {
         frm.set_df_property('custom_document_links_details', 'options', '');
         return;
     }

@@ -27,19 +27,19 @@ def update_total_payments(doc, method=None):
     all_docs = {**reference_docs, **indirect_docs}
     
     # Update total payments for each referenced document
-    for ref_key, ref_data in all_docs.items():
+    for _ref_key, ref_data in all_docs.items():
         try:
             update_document_total_payment(ref_data["doctype"], ref_data["name"])
         except Exception as e:
-            error_msg = f"Error updating total payment for {ref_data['doctype']} {ref_data['name']}: {str(e)}"
+            error_msg = f"Error updating total payment for {ref_data['doctype']} {ref_data['name']}: {e!s}"
             frappe.log_error(error_msg, "Payment Tracking Error")
 
 def find_indirect_references(direct_refs):
     """Find Orders that are indirectly referenced through Invoices"""
-    
+
     indirect_docs = {}
-    
-    for _, ref_data in direct_refs.items():
+
+    for _key, ref_data in direct_refs.items():
         doctype = ref_data["doctype"]
         docname = ref_data["name"]
         
@@ -223,7 +223,7 @@ def recalculate_all_payments():
                 update_document_total_payment(doctype, doc.name)
             except Exception as e:
                 frappe.log_error(
-                    f"Error recalculating {doctype} {doc.name}: {str(e)}",
+                    f"Error recalculating {doctype} {doc.name}: {e!s}",
                     "Payment Tracking Recalculation Error"
                 )
     

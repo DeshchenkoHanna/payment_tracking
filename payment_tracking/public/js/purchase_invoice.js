@@ -111,6 +111,9 @@ function build_complete_supplier_html(supplier_id, supplier_name, invoice_name, 
     const supplier_text = supplier_id;
     const invoice_text = invoice_name;
 
+    // Check if document is new (not saved yet)
+    const is_new = frm.is_new();
+
     // Build PO links
     let po_html = '';
     if (purchase_orders && purchase_orders.length > 0) {
@@ -118,6 +121,12 @@ function build_complete_supplier_html(supplier_id, supplier_name, invoice_name, 
             `<a href="/app/purchase-order/${po}" target="_blank" class="badge-link">${po}</a>`
         ).join(', ');
         po_html = ` / ${po_links}`;
+    }
+
+    // Build Invoice text (only if saved) - shown as plain text, not link
+    let invoice_html = '';
+    if (!is_new) {
+        invoice_html = ` / <span style="font-weight: 500;">${invoice_text}</span>`;
     }
 
     // Build Payment Request links
@@ -134,7 +143,9 @@ function build_complete_supplier_html(supplier_id, supplier_name, invoice_name, 
     if (purchase_orders && purchase_orders.length > 0) {
         copyText += ` / ${purchase_orders.join(', ')}`;
     }
-    copyText += ` / ${invoice_text}`;
+    if (!is_new) {
+        copyText += ` / ${invoice_text}`;
+    }
     if (payment_requests && payment_requests.length > 0) {
         copyText += ` / ${payment_requests.map(pr => pr.name).join(', ')}`;
     }
@@ -149,8 +160,8 @@ function build_complete_supplier_html(supplier_id, supplier_name, invoice_name, 
                 </button>
                 <span style="font-weight: 500;">${supplier_text}</span>
                 <span>${supplier_name}</span>
-                <span>${po_html} /</span>
-                <span>${invoice_text}</span>
+                <span>${po_html}</span>
+                <span>${invoice_html}</span>
                 <span>${pr_html}</span>
             </div>
         </div>
