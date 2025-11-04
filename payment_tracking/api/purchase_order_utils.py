@@ -4,20 +4,26 @@ from frappe import _
 @frappe.whitelist()
 def create_payment_request_from_po(purchase_order, payment_amount, payment_term=None, due_date=None, payment_term_pos=None):
     """
-    Create Payment Request from Purchase Order using ERPNext standard method
+    Create Payment Request from Purchase Order
     """
-    from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
+    # Get Purchase Order document
+    po = frappe.get_doc("Purchase Order", purchase_order)
 
-    # Use ERPNext's standard function to create Payment Request
-    pr = make_payment_request(
-        dt="Purchase Order",
-        dn=purchase_order,
-        recipient_id=None,
-        submit_doc=False,
-        mute_email=True
-    )
+    # Create new Payment Request
+    pr = frappe.new_doc("Payment Request")
 
-    # Set the specific amount from payment schedule
+    # Set basic fields
+    pr.payment_request_type = "Outward"
+    pr.party_type = "Supplier"
+    pr.party = po.supplier
+    pr.currency = po.currency
+    pr.company = po.company
+
+    # Set reference to Purchase Order
+    pr.reference_doctype = "Purchase Order"
+    pr.reference_name = po.name
+
+    # Set amount
     pr.grand_total = float(payment_amount)
 
     # Set payment term position for linking back
@@ -31,6 +37,9 @@ def create_payment_request_from_po(purchase_order, payment_amount, payment_term=
     # Set due date if provided
     if due_date:
         pr.schedule_date = due_date
+
+    # Set mode of payment (optional, can be set by user later)
+    pr.mode_of_payment = None
 
     # Insert the document
     pr.insert(ignore_permissions=True)
