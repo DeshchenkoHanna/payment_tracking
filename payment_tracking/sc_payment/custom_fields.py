@@ -81,6 +81,7 @@ def create_payment_tracking_fields():
                 "fieldtype": "Link",
                 "options": "DocType",
                 "read_only": 0,
+                "allow_on_submit": 1,
                 "insert_after": "outstanding"
             },
             {
@@ -89,6 +90,7 @@ def create_payment_tracking_fields():
                 "fieldtype": "Dynamic Link",
                 "options": "custom_invoice_doctype",
                 "read_only": 0,
+                "allow_on_submit": 1,
                 "insert_after": "custom_invoice_doctype"
             }
         ]
