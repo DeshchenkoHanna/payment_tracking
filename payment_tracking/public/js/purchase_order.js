@@ -137,33 +137,42 @@ function validate_payment_request_creation(frm, schedule_row, row_index) {
 }
 
 function create_payment_request_from_schedule(frm, schedule_row, row_index) {
-    // Create a new Payment Request using server-side method
-    frappe.call({
-        method: 'payment_tracking.api.purchase_order_utils.create_payment_request_from_po',
-        args: {
-            purchase_order: frm.doc.name,
-            payment_amount: schedule_row.payment_amount,
-            payment_term: schedule_row.payment_term || null,
-            due_date: schedule_row.due_date || null,
-            payment_term_pos: row_index
-        },
-        callback: function(r) {
-            if (r.message) {
-                // Payment Request created successfully
-                frappe.show_alert({
-                    message: __('Payment Request {0} created', [r.message]),
-                    indicator: 'green'
-                });
-                // Open the new Payment Request
-                frappe.set_route('Form', 'Payment Request', r.message);
-            }
-        },
-        error: function(err) {
-            frappe.show_alert({
-                message: __('Error creating Payment Request'),
-                indicator: 'red'
-            });
+    // Create a new Payment Request based on the Payment Schedule row
+    frappe.model.with_doctype('Payment Request', function() {
+        let payment_request = frappe.model.get_new_doc('Payment Request');
+
+        // Set basic fields from Purchase Order
+        payment_request.payment_request_type = 'Outward';
+        payment_request.party_type = 'Supplier';
+        payment_request.party = frm.doc.supplier;
+        payment_request.currency = frm.doc.currency;
+        payment_request.company = frm.doc.company;
+
+        // Set reference to Purchase Order
+        payment_request.reference_doctype = 'Purchase Order';
+        payment_request.reference_name = frm.doc.name;
+
+        // Set amount from payment schedule row (grand_total = payment_amount)
+        payment_request.grand_total = schedule_row.payment_amount;
+
+        // Set custom field: payment_term_pos = index of current row
+        payment_request.payment_term_pos = row_index;
+
+        // Set payment term if available
+        if (schedule_row.payment_term) {
+            payment_request.payment_term = schedule_row.payment_term;
         }
+
+        // Set due date from schedule
+        if (schedule_row.due_date) {
+            payment_request.due_date = schedule_row.due_date;
+        }
+
+        // Note: Linking back to Payment Schedule is handled by server-side hook (after_insert)
+        // No need to set custom_invoice_doctype and custom_invoice_name here
+
+        // Open the new Payment Request form
+        frappe.set_route('Form', 'Payment Request', payment_request.name);
     });
 }
 

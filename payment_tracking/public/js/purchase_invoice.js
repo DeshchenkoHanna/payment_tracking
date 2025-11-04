@@ -123,10 +123,10 @@ function build_complete_supplier_html(supplier_id, supplier_name, invoice_name, 
         po_html = ` / ${po_links}`;
     }
 
-    // Build Invoice link (only if saved)
+    // Build Invoice text (only if saved) - shown as plain text, not link
     let invoice_html = '';
     if (!is_new) {
-        invoice_html = ` / <a href="/app/purchase-invoice/${invoice_text}" target="_blank" style="text-decoration: underline;">${invoice_text}</a>`;
+        invoice_html = ` / <span style="font-weight: 500;">${invoice_text}</span>`;
     }
 
     // Build Payment Request links
