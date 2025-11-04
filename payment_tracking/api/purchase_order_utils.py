@@ -149,7 +149,7 @@ def link_payment_request_to_schedule(doc, method=None):
 
     except Exception as e:
         frappe.log_error(
-            message=f"Error linking Payment Request {doc.name} to Purchase Order {doc.reference_name}: {str(e)}",
+            message=f"Error linking Payment Request {doc.name} to Purchase Order {doc.reference_name}: {e!s}",
             title="Payment Request Linking Error"
         )
 
@@ -207,6 +207,7 @@ def link_purchase_invoice_to_schedule(doc, method=None):
 
     except Exception as e:
         frappe.log_error(
-            message=f"Error linking Purchase Invoice {doc.name} to Purchase Order {purchase_order_name}: {str(e)}",
+            message=f"Error linking Purchase Invoice {doc.name} to Purchase Order {purchase_order_name}: {e!s}",
             title="Purchase Invoice Linking Error"
         )
+

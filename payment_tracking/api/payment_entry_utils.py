@@ -60,7 +60,7 @@ def get_connected_orders_for_payment_entry(payment_entry_name):
         return unique_orders
 
     except Exception as e:
-        frappe.log_error(f"Error in get_connected_orders_for_payment_entry: {str(e)}")
+        frappe.log_error(f"Error in get_connected_orders_for_payment_entry: {e!s}")
         return []
 
 @frappe.whitelist()
@@ -79,5 +79,5 @@ def get_party_name(party_type, party_id):
         return result if result else party_id
 
     except Exception as e:
-        frappe.log_error(f"Error in get_party_name: {str(e)}")
+        frappe.log_error(f"Error in get_party_name: {e!s}")
         return party_id

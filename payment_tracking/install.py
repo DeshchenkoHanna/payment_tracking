@@ -10,5 +10,5 @@ def after_install():
         frappe.msgprint("Payment Tracking app installed successfully!")
         
     except Exception as e:
-        frappe.log_error(f"Error during Payment Tracking installation: {str(e)}")
-        frappe.throw(f"Installation failed: {str(e)}")
+        frappe.log_error(f"Error during Payment Tracking installation: {e!s}")
+        frappe.throw(f"Installation failed: {e!s}")
