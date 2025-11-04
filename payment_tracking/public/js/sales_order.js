@@ -137,33 +137,34 @@ function validate_payment_request_creation(frm, schedule_row, row_index) {
 }
 
 function create_payment_request_from_schedule(frm, schedule_row, row_index) {
-    // Create a new Payment Request based on the Payment Schedule row
-    frappe.route_options = {
-        'payment_request_type': 'Inward',
-        'party_type': 'Customer',
-        'party': frm.doc.customer,
-        'currency': frm.doc.currency,
-        'company': frm.doc.company,
-        'reference_doctype': 'Sales Order',
-        'reference_name': frm.doc.name,
-        'grand_total': schedule_row.payment_amount,
-        'payment_term_pos': row_index
-    };
-
-    // Set payment term if available
-    if (schedule_row.payment_term) {
-        frappe.route_options.payment_term = schedule_row.payment_term;
-    }
-
-    // Set due date from schedule
-    if (schedule_row.due_date) {
-        frappe.route_options.due_date = schedule_row.due_date;
-    }
-
-    // Note: Linking back to Payment Schedule is handled by server-side hook (after_insert)
-
-    // Navigate to new Payment Request form
-    frappe.new_doc('Payment Request');
+    // Create a new Payment Request using server-side method
+    frappe.call({
+        method: 'payment_tracking.api.sales_order_utils.create_payment_request_from_so',
+        args: {
+            sales_order: frm.doc.name,
+            payment_amount: schedule_row.payment_amount,
+            payment_term: schedule_row.payment_term || null,
+            due_date: schedule_row.due_date || null,
+            payment_term_pos: row_index
+        },
+        callback: function(r) {
+            if (r.message) {
+                // Payment Request created successfully
+                frappe.show_alert({
+                    message: __('Payment Request {0} created', [r.message]),
+                    indicator: 'green'
+                });
+                // Open the new Payment Request
+                frappe.set_route('Form', 'Payment Request', r.message);
+            }
+        },
+        error: function() {
+            frappe.show_alert({
+                message: __('Error creating Payment Request'),
+                indicator: 'red'
+            });
+        }
+    });
 }
 
 function create_sales_invoice_from_schedule(frm, schedule_row) {
