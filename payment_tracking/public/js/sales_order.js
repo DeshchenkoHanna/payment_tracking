@@ -19,27 +19,23 @@ function add_create_buttons_to_payment_schedule(frm) {
 
             // Check if this column has btn-open-row (Edit button)
             if ($last_col.find('.btn-open-row').length) {
-                // Replace the entire column content with both buttons
-                $last_col
-                    .css({
-                        'display': 'flex',
-                        'justify-content': 'center',
-                        'align-items': 'center'
-                    })
-                    .html(`
-                        <div class="custom-create-btn" data-toggle="tooltip" data-placement="right" title="Create Payment Request or Invoice" style="cursor: pointer; padding: 0 5px 0 5px;">
-                            <a><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <line x1="12" y1="8" x2="12" y2="16"></line>
-                                <line x1="8" y1="12" x2="16" y2="12"></line>
-                            </svg></a>
-                        </div>
-                        <div class="btn-open-row" data-toggle="tooltip" data-placement="right" title="" data-original-title="Edit">
-                            <a><svg class="icon icon-xs" style="" aria-hidden="true">
-                                <use class="" href="#icon-edit"></use>
-                            </svg></a>
-                        </div>
-                    `);
+                // Set flex layout for the column
+                $last_col.css({
+                    'display': 'flex',
+                    'justify-content': 'center',
+                    'align-items': 'center'
+                });
+
+                // Insert custom button before the existing btn-open-row
+                $last_col.prepend(`
+                    <div class="custom-create-btn" data-toggle="tooltip" data-placement="right" title="Create Payment Request or Invoice" style="cursor: pointer; padding: 0 5px 0 5px;">
+                        <a><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg></a>
+                    </div>
+                `);
 
                 // Attach click handler to custom button
                 $last_col.find('.custom-create-btn').on('click', function(e) {

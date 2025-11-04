@@ -7,3 +7,4 @@
 
 # Custom Fields Update
 payment_tracking.patches.update_custom_fields
+payment_tracking.patches.set_allow_on_submit_for_payment_schedule
