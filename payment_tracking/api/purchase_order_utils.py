@@ -167,3 +167,53 @@ def link_purchase_invoice_to_schedule(doc, method=None):
             title="Purchase Invoice Linking Error"
         )
 
+
+def unlink_payment_request_from_schedule(doc, method=None):
+    """
+    Remove Payment Request link from Payment Schedule when PR is cancelled.
+    This runs on_cancel of Payment Request.
+    """
+    # Only process if it's linked to a Purchase Order
+    if doc.reference_doctype != "Purchase Order" or not doc.reference_name:
+        return
+
+    try:
+        # Find Payment Schedule rows that link to this Payment Request
+        schedule_rows = frappe.get_all(
+            "Payment Schedule",
+            filters={
+                "parent": doc.reference_name,
+                "parenttype": "Purchase Order",
+                "custom_invoice_doctype": "Payment Request",
+                "custom_invoice_name": doc.name
+            },
+            fields=["name", "idx"]
+        )
+
+        if not schedule_rows:
+            return
+
+        # Clear the links
+        for row in schedule_rows:
+            frappe.db.set_value(
+                "Payment Schedule",
+                row.name,
+                {
+                    "custom_invoice_doctype": "",
+                    "custom_invoice_name": ""
+                },
+                update_modified=False
+            )
+
+        frappe.msgprint(
+            _("Payment Request {0} unlinked from Payment Schedule").format(
+                frappe.bold(doc.name)
+            )
+        )
+
+    except Exception as e:
+        frappe.log_error(
+            message=f"Error unlinking Payment Request {doc.name} from Purchase Order {doc.reference_name}: {e!s}",
+            title="Payment Request Unlinking Error"
+        )
+

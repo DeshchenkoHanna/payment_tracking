@@ -134,9 +134,9 @@ after_install = "payment_tracking.install.after_install"
 # ---------------
 # Override standard doctype classes
 
-# override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
-# }
+override_doctype_class = {
+    "Payment Entry": "payment_tracking.sc_payment.overrides.payment_entry.CustomPaymentEntry"
+}
 
 # Document Events
 # ---------------
@@ -152,6 +152,7 @@ after_install = "payment_tracking.install.after_install"
 
 doc_events = {
     "Payment Entry": {
+        "before_submit": "payment_tracking.sc_payment.doctype_events.payment_entry.populate_payment_schedule_idx",
         "on_submit": "payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments",
         "on_update_after_submit": "payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments",
         "on_cancel": "payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments",
@@ -161,13 +162,23 @@ doc_events = {
         "after_insert": [
             "payment_tracking.api.sales_order_utils.link_payment_request_to_schedule",
             "payment_tracking.api.purchase_order_utils.link_payment_request_to_schedule"
+        ],
+        "on_cancel": [
+            "payment_tracking.api.sales_order_utils.unlink_payment_request_from_schedule",
+            "payment_tracking.api.purchase_order_utils.unlink_payment_request_from_schedule"
         ]
     },
     "Sales Invoice": {
         "after_insert": "payment_tracking.api.sales_order_utils.link_sales_invoice_to_schedule"
     },
     "Purchase Invoice": {
-        "after_insert": "payment_tracking.api.purchase_order_utils.link_purchase_invoice_to_schedule"
+        "after_insert": "payment_tracking.api.purchase_order_utils.link_purchase_invoice_to_schedule",
+        "before_save": "payment_tracking.sc_payment.doctype_events.purchase_invoice.before_save",
+        "before_submit": "payment_tracking.sc_payment.doctype_events.purchase_invoice.before_submit"
+    },
+    "Purchase Order": {
+        "before_validate": "payment_tracking.sc_payment.doctype_events.purchase_order.before_validate",
+        "validate": "payment_tracking.sc_payment.doctype_events.purchase_order.validate"
     }
 }
 
@@ -185,7 +196,10 @@ fixtures = [
                     "Sales Invoice-custom_total_payment",
                     "Payment Entry-custom_document_links_details",
                     "Payment Schedule-custom_invoice_doctype",
-                    "Payment Schedule-custom_invoice_name"
+                    "Payment Schedule-custom_invoice_name",
+                    "Purchase Order-custom_manual_payment_schedule",
+                    "Payment Request-custom_due_date",
+                    "Payment Entry Reference-custom_payment_schedule_idx"
                 ]
             ]
         ]

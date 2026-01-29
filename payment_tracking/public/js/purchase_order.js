@@ -1,6 +1,18 @@
 frappe.ui.form.on('Purchase Order', {
     refresh: function(frm) {
         add_create_buttons_to_payment_schedule(frm);
+    },
+
+    custom_manual_payment_schedule: function(frm) {
+        // When checkbox is checked, set invoice_portion to 0 for all payment schedule rows
+        if (frm.doc.custom_manual_payment_schedule && frm.doc.payment_schedule) {
+            frm.doc.payment_schedule.forEach(function(row) {
+                if (row.invoice_portion) {
+                    frappe.model.set_value(row.doctype, row.name, 'invoice_portion', 0);
+                }
+            });
+            frm.refresh_field('payment_schedule');
+        }
     }
 });
 
@@ -166,6 +178,7 @@ function create_payment_request_from_schedule(frm, schedule_row, row_index) {
         // Set due date from schedule
         if (schedule_row.due_date) {
             payment_request.due_date = schedule_row.due_date;
+            payment_request.custom_due_date = schedule_row.due_date;
         }
 
         // Note: Linking back to Payment Schedule is handled by server-side hook (after_insert)
