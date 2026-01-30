@@ -3,9 +3,47 @@ import frappe
 from frappe import _
 # import debugpy
 
+
+def populate_payment_schedule_idx(doc, method=None):
+    """
+    Before submit: set custom_payment_schedule_idx on each Payment Entry Reference row.
+    This maps each reference to the correct Payment Schedule row by idx,
+    fixing the bug where duplicate payment_term values cause all matching rows to be updated.
+    """
+    for ref in doc.get("references"):
+        if not ref.payment_term or not ref.reference_name:
+            continue
+
+        if ref.get("custom_payment_schedule_idx"):
+            continue
+
+        # Find the matching Payment Schedule row by payment_term
+        # If multiple rows share the same payment_term, pick the first one
+        # that hasn't already been assigned to another reference
+        assigned_idxs = {
+            r.get("custom_payment_schedule_idx")
+            for r in doc.get("references")
+            if r.get("custom_payment_schedule_idx")
+            and r.reference_name == ref.reference_name
+            and r.payment_term == ref.payment_term
+        }
+
+        schedule_rows = frappe.get_all(
+            "Payment Schedule",
+            filters={"parent": ref.reference_name, "payment_term": ref.payment_term},
+            fields=["idx"],
+            order_by="idx asc",
+        )
+
+        for row in schedule_rows:
+            if row.idx not in assigned_idxs:
+                ref.custom_payment_schedule_idx = row.idx
+                break
+
+
 def update_total_payments(doc, method=None):
     """Update total payment amounts in related documents when Payment Entry changes"""
-    
+
     if not doc.references:
         return
         

@@ -17,6 +17,14 @@ def create_payment_tracking_fields():
                 "insert_after": "rounded_total",
                 "in_list_view": 1,
                 "in_standard_filter": 1
+            },
+            {
+                "fieldname": "custom_manual_payment_schedule",
+                "label": "Manual Payment Amount",
+                "fieldtype": "Check",
+                "insert_after": "payment_schedule",
+                "description": "Skip automatic recalculation of Payment Schedule amounts",
+                "translatable": 0
             }
         ],
         "Sales Order": [
@@ -74,12 +82,30 @@ def create_payment_tracking_fields():
                 "insert_after": "total_allocated_amount"
             }
         ],
+        "Payment Request": [
+            {
+                "fieldname": "custom_due_date",
+                "label": "Due Date",
+                "fieldtype": "Date",
+                "insert_after": "transaction_date"
+            }
+        ],
+        "Payment Entry Reference": [
+            {
+                "fieldname": "custom_payment_schedule_idx",
+                "label": "Payment Schedule Idx",
+                "fieldtype": "Int",
+                "read_only": 1,
+                "hidden": 1,
+                "insert_after": "payment_term"
+            }
+        ],
         "Payment Schedule": [
             {
                 "fieldname": "custom_invoice_doctype",
                 "label": "Invoice Doctype",
-                "fieldtype": "Link",
-                "options": "DocType",
+                "fieldtype": "Select",
+                "options": "Payment Request\nSales Invoice\nPurchase Invoice",
                 "read_only": 0,
                 "allow_on_submit": 1,
                 "insert_after": "outstanding"

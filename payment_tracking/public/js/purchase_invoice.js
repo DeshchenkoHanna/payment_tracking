@@ -2,6 +2,7 @@
 frappe.ui.form.on('Purchase Invoice', {
     onload: function(frm) {
         update_supplier_po_details(frm);
+        fix_payment_schedule_outstanding(frm);
     },
 
     refresh: function(frm) {
@@ -168,6 +169,22 @@ function build_complete_supplier_html(supplier_id, supplier_name, invoice_name, 
     `;
 
     frm.set_df_property("custom_document_links_details", "options", html);
+}
+
+function fix_payment_schedule_outstanding(frm) {
+    // Fix outstanding amount on new Purchase Invoices where invoice_portion is 0
+    // (inherited from PO with manual payment schedule)
+    if (frm.is_new() && frm.doc.payment_schedule) {
+        frm.doc.payment_schedule.forEach(function(row) {
+            if (!row.invoice_portion && row.payment_amount && !row.outstanding) {
+                frappe.model.set_value(row.doctype, row.name, 'outstanding',
+                    flt(row.payment_amount) - flt(row.paid_amount));
+                frappe.model.set_value(row.doctype, row.name, 'base_outstanding',
+                    flt(row.base_payment_amount) - flt(row.paid_amount * (frm.doc.conversion_rate || 1)));
+            }
+        });
+        frm.refresh_field('payment_schedule');
+    }
 }
 
 function get_payment_requests(invoice_name, callback) {
