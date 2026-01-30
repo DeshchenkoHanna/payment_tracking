@@ -20,7 +20,7 @@ def create_payment_tracking_fields():
             },
             {
                 "fieldname": "custom_manual_payment_schedule",
-                "label": "Manual Payment Schedule",
+                "label": "Manual Payment Amount",
                 "fieldtype": "Check",
                 "insert_after": "payment_schedule",
                 "description": "Skip automatic recalculation of Payment Schedule amounts",
