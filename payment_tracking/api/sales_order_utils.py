@@ -168,6 +168,74 @@ def link_sales_invoice_to_schedule(doc, method=None):
         )
 
 
+def unlink_sales_invoice_from_schedule(doc, method=None):
+    """
+    Remove Sales Invoice link from Payment Schedule when SI is cancelled.
+    This runs before_cancel of Sales Invoice.
+    """
+    _do_unlink_sales_invoice(doc.name, doc.items)
+
+
+@frappe.whitelist()
+def unlink_sales_invoice_before_cancel(invoice_name):
+    """
+    Whitelisted API to unlink Sales Invoice from SO Payment Schedule.
+    Called from JS before the cancel flow starts.
+    """
+    si = frappe.get_doc("Sales Invoice", invoice_name)
+    _do_unlink_sales_invoice(si.name, si.items)
+
+
+def _do_unlink_sales_invoice(invoice_name, items):
+    """Core logic to unlink Sales Invoice from SO Payment Schedule."""
+    if not items:
+        return
+
+    # Get linked Sales Order from items
+    sales_order_name = None
+    for item in items:
+        if item.sales_order:
+            sales_order_name = item.sales_order
+            break
+
+    if not sales_order_name:
+        return
+
+    try:
+        # Find Payment Schedule rows that link to this Sales Invoice
+        schedule_rows = frappe.get_all(
+            "Payment Schedule",
+            filters={
+                "parent": sales_order_name,
+                "parenttype": "Sales Order",
+                "custom_invoice_doctype": "Sales Invoice",
+                "custom_invoice_name": invoice_name
+            },
+            fields=["name", "idx"]
+        )
+
+        if not schedule_rows:
+            return
+
+        # Clear the links
+        for row in schedule_rows:
+            frappe.db.set_value(
+                "Payment Schedule",
+                row.name,
+                {
+                    "custom_invoice_doctype": "",
+                    "custom_invoice_name": ""
+                },
+                update_modified=False
+            )
+
+    except Exception as e:
+        frappe.log_error(
+            message=f"Error unlinking Sales Invoice {invoice_name} from Sales Order {sales_order_name}: {e!s}",
+            title="Sales Invoice Unlinking Error"
+        )
+
+
 def unlink_payment_request_from_schedule(doc, method=None):
     """
     Remove Payment Request link from Payment Schedule when PR is cancelled.

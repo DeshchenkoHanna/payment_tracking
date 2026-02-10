@@ -168,6 +168,74 @@ def link_purchase_invoice_to_schedule(doc, method=None):
         )
 
 
+def unlink_purchase_invoice_from_schedule(doc, method=None):
+    """
+    Remove Purchase Invoice link from Payment Schedule when PI is cancelled.
+    This runs before_cancel of Purchase Invoice.
+    """
+    _do_unlink_purchase_invoice(doc.name, doc.items)
+
+
+@frappe.whitelist()
+def unlink_purchase_invoice_before_cancel(invoice_name):
+    """
+    Whitelisted API to unlink Purchase Invoice from PO Payment Schedule.
+    Called from JS before the cancel flow starts.
+    """
+    pi = frappe.get_doc("Purchase Invoice", invoice_name)
+    _do_unlink_purchase_invoice(pi.name, pi.items)
+
+
+def _do_unlink_purchase_invoice(invoice_name, items):
+    """Core logic to unlink Purchase Invoice from PO Payment Schedule."""
+    if not items:
+        return
+
+    # Get linked Purchase Order from items
+    purchase_order_name = None
+    for item in items:
+        if item.purchase_order:
+            purchase_order_name = item.purchase_order
+            break
+
+    if not purchase_order_name:
+        return
+
+    try:
+        # Find Payment Schedule rows that link to this Purchase Invoice
+        schedule_rows = frappe.get_all(
+            "Payment Schedule",
+            filters={
+                "parent": purchase_order_name,
+                "parenttype": "Purchase Order",
+                "custom_invoice_doctype": "Purchase Invoice",
+                "custom_invoice_name": invoice_name
+            },
+            fields=["name", "idx"]
+        )
+
+        if not schedule_rows:
+            return
+
+        # Clear the links
+        for row in schedule_rows:
+            frappe.db.set_value(
+                "Payment Schedule",
+                row.name,
+                {
+                    "custom_invoice_doctype": "",
+                    "custom_invoice_name": ""
+                },
+                update_modified=False
+            )
+
+    except Exception as e:
+        frappe.log_error(
+            message=f"Error unlinking Purchase Invoice {invoice_name} from Purchase Order {purchase_order_name}: {e!s}",
+            title="Purchase Invoice Unlinking Error"
+        )
+
+
 def unlink_payment_request_from_schedule(doc, method=None):
     """
     Remove Payment Request link from Payment Schedule when PR is cancelled.

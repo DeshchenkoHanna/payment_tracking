@@ -45,6 +45,7 @@ app_license = "mit"
 # include js in doctype views
 doctype_js = {
     "Purchase Invoice": "public/js/purchase_invoice.js",
+    "Sales Invoice": "public/js/sales_invoice.js",
     "Payment Entry": "public/js/payment_entry.js",
     "Sales Order": "public/js/sales_order.js",
     "Purchase Order": "public/js/purchase_order.js"
@@ -169,12 +170,14 @@ doc_events = {
         ]
     },
     "Sales Invoice": {
-        "after_insert": "payment_tracking.api.sales_order_utils.link_sales_invoice_to_schedule"
+        "after_insert": "payment_tracking.api.sales_order_utils.link_sales_invoice_to_schedule",
+        "before_cancel": "payment_tracking.api.sales_order_utils.unlink_sales_invoice_from_schedule"
     },
     "Purchase Invoice": {
         "after_insert": "payment_tracking.api.purchase_order_utils.link_purchase_invoice_to_schedule",
         "before_save": "payment_tracking.sc_payment.doctype_events.purchase_invoice.before_save",
-        "before_submit": "payment_tracking.sc_payment.doctype_events.purchase_invoice.before_submit"
+        "before_submit": "payment_tracking.sc_payment.doctype_events.purchase_invoice.before_submit",
+        "before_cancel": "payment_tracking.api.purchase_order_utils.unlink_purchase_invoice_from_schedule"
     },
     "Purchase Order": {
         "before_validate": "payment_tracking.sc_payment.doctype_events.purchase_order.before_validate",
