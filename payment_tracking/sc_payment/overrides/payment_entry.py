@@ -90,7 +90,23 @@ class CustomPaymentEntry(PaymentEntry):
 
         for idx, (key, allocated_amount) in enumerate(invoice_payment_amount_map.items(), 1):
             if not invoice_paid_amount_map.get(key):
-                frappe.throw(_("Payment term {0} not used in {1}").format(key[0], key[1]))
+                # Try fallback: match by payment_term only (ignore idx)
+                fallback_key = None
+                for existing_key in invoice_paid_amount_map:
+                    if existing_key[0] == key[0] and existing_key[1] == key[1] and existing_key[2] == key[2]:
+                        fallback_key = existing_key
+                        break
+
+                if fallback_key:
+                    invoice_paid_amount_map[key] = invoice_paid_amount_map[fallback_key]
+                elif cancel:
+                    frappe.msgprint(
+                        _("Payment term {0} not found in {1}, skipping schedule update").format(key[0], key[1]),
+                        indicator="orange",
+                    )
+                    continue
+                else:
+                    frappe.throw(_("Payment term {0} not used in {1}").format(key[0], key[1]))
 
             allocated_amount = self.get_allocated_amount_in_transaction_currency(
                 allocated_amount, key[2], key[1]
