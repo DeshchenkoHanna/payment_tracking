@@ -85,9 +85,15 @@ def _patched_update_reference_in_payment_entry(
             original_payment_term = original_row.get("payment_term")
 
     # Call original function
-    row = _original_update_reference_in_payment_entry(
+    result = _original_update_reference_in_payment_entry(
         d, payment_entry, do_not_save, skip_ref_details_update_for_pe, dimensions_dict
     )
+
+    # Handle both return formats: single row or tuple (row, update_advance_paid)
+    if isinstance(result, tuple):
+        row = result[0]
+    else:
+        row = result
 
     # Copy custom_payment_schedule_idx and payment_term to the new row if it was an advance allocation
     if row and original_idx:
@@ -96,7 +102,7 @@ def _patched_update_reference_in_payment_entry(
         if not row.get("payment_term") and original_payment_term:
             row.payment_term = original_payment_term
 
-    return row
+    return result
 
 
 accounts_utils_module.update_reference_in_payment_entry = _patched_update_reference_in_payment_entry
