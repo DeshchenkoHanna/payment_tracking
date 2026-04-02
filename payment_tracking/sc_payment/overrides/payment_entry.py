@@ -99,14 +99,12 @@ class CustomPaymentEntry(PaymentEntry):
 
                 if fallback_key:
                     invoice_paid_amount_map[key] = invoice_paid_amount_map[fallback_key]
-                elif cancel:
+                else:
                     frappe.msgprint(
                         _("Payment term {0} not found in {1}, skipping schedule update").format(key[0], key[1]),
                         indicator="orange",
                     )
                     continue
-                else:
-                    frappe.throw(_("Payment term {0} not used in {1}").format(key[0], key[1]))
 
             allocated_amount = self.get_allocated_amount_in_transaction_currency(
                 allocated_amount, key[2], key[1]
