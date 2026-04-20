@@ -135,8 +135,10 @@ after_install = "payment_tracking.install.after_install"
 # ---------------
 # Override standard doctype classes
 
-override_doctype_class = {
-    "Payment Entry": "payment_tracking.sc_payment.overrides.payment_entry.CustomPaymentEntry"
+extend_doctype_class = {
+    "Payment Entry": [
+        "payment_tracking.sc_payment.overrides.payment_entry.PaymentEntryExtension"
+    ]
 }
 
 # Document Events

@@ -13,10 +13,7 @@ from frappe.model.meta import get_field_precision
 from frappe.utils import flt
 from frappe.utils.data import fmt_money
 
-from erpnext.accounts.doctype.payment_entry.payment_entry import PaymentEntry
-
-
-class CustomPaymentEntry(PaymentEntry):
+class PaymentEntryExtension:
 
     def validate_duplicate_entry(self):
         """
