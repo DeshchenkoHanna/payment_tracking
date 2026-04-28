@@ -158,6 +158,7 @@ function create_payment_request_from_schedule(frm, schedule_row, row_index) {
         payment_request.party_type = 'Supplier';
         payment_request.party = frm.doc.supplier;
         payment_request.currency = frm.doc.currency;
+        payment_request.party_account_currency = frm.doc.party_account_currency;
         payment_request.company = frm.doc.company;
 
         // Set reference to Purchase Order
