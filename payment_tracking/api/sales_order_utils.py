@@ -26,8 +26,11 @@ def can_create_payment_request(sales_order, payment_amount):
     # Get existing Payment Request amount (all submitted PRs)
     existing_pr_amount = get_existing_payment_request_amount(so)
 
-    # Calculate remaining amount after existing PRs
-    remaining_amount = available_amount - existing_pr_amount
+    # Remaining requestable amount = grand total minus what has already been
+    # requested via submitted Payment Requests. We intentionally do NOT subtract
+    # advance_paid here: a paid PR is already counted in existing_pr_amount, so
+    # subtracting both would double-count it and wrongly block still-unrequested rows.
+    remaining_amount = grand_total - existing_pr_amount
 
     if remaining_amount <= 0:
         return {
