@@ -141,6 +141,7 @@ function create_payment_request_from_schedule(frm, schedule_row, row_index) {
         payment_request.payment_request_type = 'Inward';
         payment_request.party_type = 'Customer';
         payment_request.party = frm.doc.customer;
+        payment_request.party_name = frm.doc.customer_name;
         payment_request.currency = frm.doc.currency;
         payment_request.party_account_currency = frm.doc.party_account_currency;
         payment_request.company = frm.doc.company;
