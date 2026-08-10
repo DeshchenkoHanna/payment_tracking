@@ -11,23 +11,16 @@ def can_create_payment_request(purchase_order, payment_amount):
     po = frappe.get_doc("Purchase Order", purchase_order)
     payment_amount = float(payment_amount)
 
-    # Calculate available amount (same as ERPNext)
+    # PO total (advance_paid is intentionally NOT subtracted here: paid amounts
+    # are already represented by their submitted Payment Requests, so subtracting
+    # both would double-count the advance)
     grand_total = po.rounded_total or po.grand_total
-    advance_paid = po.advance_paid or 0
-    available_amount = grand_total - advance_paid
 
-    # If already fully paid
-    if available_amount <= 0:
-        return {
-            "can_create": False,
-            "error_message": _("Payment Entry is already created")
-        }
-
-    # Get existing Payment Request amount (all submitted PRs)
+    # Get existing Payment Request amount (all submitted, non-cancelled PRs)
     existing_pr_amount = get_existing_payment_request_amount(po)
 
     # Calculate remaining amount after existing PRs
-    remaining_amount = available_amount - existing_pr_amount
+    remaining_amount = grand_total - existing_pr_amount
 
     if remaining_amount <= 0:
         return {
