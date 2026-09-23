@@ -243,6 +243,10 @@ fixtures = [
 # override_whitelisted_methods = {
 # 	"frappe.desk.doctype.event.event.get_events": "payment_tracking.event.get_events"
 # }
+override_whitelisted_methods = {
+    "erpnext.accounts.doctype.payment_request.payment_request.resend_payment_email":
+        "payment_tracking.api.payment_request_utils.resend_payment_email_disabled"
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,

@@ -22,3 +22,21 @@ def mute_auto_email(doc, method=None):
         doc.mute_email = 1
 
     doc.flags.mute_email = True
+
+
+@frappe.whitelist()
+def resend_payment_email_disabled(docname=None, *args, **kwargs):
+    """
+    Replaces erpnext's ``resend_payment_email`` via ``override_whitelisted_methods``.
+
+    The standard "Resend Payment Email" button calls ``PaymentRequest.send_email``
+    directly and ignores the Mute Email flag. The button stays visible, but clicking
+    it now shows this message instead of sending anything.
+    """
+    frappe.throw(
+        frappe._(
+            "Automatic payment e-mails are disabled for Payment Requests. "
+            "Use Menu > Email to send the request manually."
+        ),
+        title=frappe._("Payment Email Disabled"),
+    )
