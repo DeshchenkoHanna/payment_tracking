@@ -162,6 +162,7 @@ doc_events = {
         "on_trash": "payment_tracking.sc_payment.doctype_events.payment_entry.update_total_payments"
     },
     "Payment Request": {
+        "validate": "payment_tracking.api.payment_request_utils.mute_auto_email",
         "after_insert": [
             "payment_tracking.api.sales_order_utils.link_payment_request_to_schedule",
             "payment_tracking.api.purchase_order_utils.link_payment_request_to_schedule"
